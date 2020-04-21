@@ -4,13 +4,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
 public class VideoDownloader{
     private HashMap<String,ArrayList<String>> RSSFeedsPaths = new HashMap<>();                                               //stores the name of the class, the URL of the RSS feed and the Path you wish to download too. Uses the name as a key
-    private HashMap<String,LinkedHashSet<String>> videos = new HashMap<>();                                                  //stores all the video URLs from the class, uses the name as a key
-    private Set<String> alreadyDownloaded = new HashSet<>();                                                                 //A set to store all of the already downloaded videos
+    private HashMap<String,List<videoData>> videos = new HashMap<>();                                                  //stores all the video URLs from the class, uses the name as a key
+
+
 
 
     private String mainFilePath = "mainFile";                                                                                //path to the mainFile
@@ -26,28 +28,10 @@ public class VideoDownloader{
         loadMainFile();
         downloadRSSFeed();
         downloadVideo();
-        writeAlreadyAdded();
 
     }
 
-    /**
-     * Writes to a file a collection of already downloaded videos
-     */
-    public void writeAlreadyAdded(){
-        System.out.println("Writing to file to store whats already been downloaded");
-        try{
-            File file = new File(loadedFilePath);                                                                                
-            FileWriter fWriter = new FileWriter(file);                                                                           //writes the videos that have already been downloaded to a file
-            for(String s : alreadyDownloaded){                                                                                   // loops through the videos that have been downloaded
-                fWriter.write(s+'\n');
-            }
-            fWriter.close();
-            System.out.println("Successfully written to file");
-        }catch(IOException e){
-            System.out.println("Error writing to file");
-            System.out.println(e);
-        }
-    }
+   
 
     /**
      * Downloads all of the videos
@@ -59,27 +43,33 @@ public class VideoDownloader{
     public void downloadVideo(){
         System.out.println("Attempting to download videos");
         for(String s : videos.keySet()){                                                                                          //loops through all of the classes you are downloading videos for
-            int i =0;
-            for(String url : videos.get(s)){                                                                                      // loops throgu all of the video URLs for that class then downloads the video
+            
+            for(videoData vD : videos.get(s)){                                                                                      // loops throgu all of the video URLs for that class then downloads the video
                 try{
-                    System.out.println("Downloading "+ videos.get(s));
-                    BufferedInputStream in = new BufferedInputStream(new URL(url).openStream());
-                    File file = new File(RSSFeedsPaths.get(s).get(2),s+i+".mp4");
-                    FileOutputStream fileOutputStream = new FileOutputStream(file);
-                    byte dataBuffer[] = new byte[8000];
-                    int bytesRead;
-                    while ((bytesRead = in.read(dataBuffer, 0, 8000)) != -1) {
-                        fileOutputStream.write(dataBuffer, 0, bytesRead);
+                    System.out.println("Downloading "+ vD.getName());
+                    BufferedInputStream in = new BufferedInputStream(new URL(vD.getURL()).openStream());
+                    
+
+                    File file = new File(RSSFeedsPaths.get(s).get(2)+"/",vD.getName()+".mp4");
+
+                    if(!file.exists()){
+                        FileOutputStream fileOutputStream = new FileOutputStream(file);
+                        byte dataBuffer[] = new byte[8000];
+                        int bytesRead;
+                        while ((bytesRead = in.read(dataBuffer, 0, 8000)) != -1) {
+                            fileOutputStream.write(dataBuffer, 0, bytesRead);
+                        }
+                        fileOutputStream.close();
+                        System.out.println("Successfully downloaded " + vD.getName() + ".mp4");
+                    }else{
+                        System.out.println("already downloaded " + vD.getName());
                     }
-                    fileOutputStream.close();
-                    alreadyDownloaded.add(url);
-                    System.out.println("Successfully downloaded " + s+i+".mp4");
 
                 }catch(IOException e){
                     System.out.println("Something went wrong when downloading the video");
                     System.out.println(e);
                 }
-                i++;
+                
             }
         }
     }
@@ -125,14 +115,36 @@ public class VideoDownloader{
             try{
                 Scanner sc = new Scanner(file);
 
-                while(sc.hasNextLine()){                                                                                            //iterates through the RSS feed
+                String name = null;
+                String URL = null;
+
+                while(sc.hasNextLine()){ 
+                                                                                                               //iterates through the RSS feed
                     String line = sc.nextLine();
                     if(line.contains(".mp4") && line.contains("url")){                                                              //searches for lines that contain .mp4 and URL
                         String a[] = line.split("\"");
-                        if(!alreadyDownloaded.contains(a[1])){                                                                      // if the video has already been downloaded, dont add it to the videos that you will download
-                            videos.get(s).add(a[1]);
-                        }
+                        URL = a[1];
                         
+                    }else if(line.contains("title") && line.contains("/title")){
+                        String a = line.substring(line.indexOf(">")+1,line.length());
+                        a = a.substring(0,a.indexOf("<"));
+                        a=a.replace("/","_");
+                        a=a.replace(" ", "_");
+                        
+                        name = a;
+
+                    }
+
+                    if(URL != null && name != null){
+
+                        videoData vD = new videoData(name, URL);
+                        
+                        
+                            videos.get(s).add(vD);
+                        
+                        
+                     name = null;
+                     URL = null;
                     }
                 }
                 sc.close();
@@ -166,7 +178,7 @@ public class VideoDownloader{
                     data.add(sc.nextLine());                                                                                        //second will be the link to the RSS Feed
                     data.add(sc.nextLine() +"/"+ line);                                                                             //Third wil be the path on your device you with to store
                     RSSFeedsPaths.put(line, data);
-                    videos.put(line,new LinkedHashSet<String>());                                                                   //adds the information to a map to use at a later time
+                    videos.put(line,new ArrayList<videoData>());                                                                //adds the information to a map to use at a later time      
                 }
             }
             
@@ -177,27 +189,6 @@ public class VideoDownloader{
             System.out.println("Please check that there is a file called mainFile in the directory of the program");
             System.out.println(e);
         }
-
-
-
-        File alreadyDownloadedFile = new File(loadedFilePath);                                                                       // loads the file that contains the URLs that have already Been downloaded
-        try{
-            System.out.println("Loaded already downloaded videos");                                                 
-            Scanner sc = new Scanner(alreadyDownloadedFile);
-
-            while(sc.hasNextLine()){                                                                                                 // loops through the file to read what videos have already been downloaded
-               alreadyDownloaded.add(sc.nextLine());    
-            }
-            sc.close();
-            System.out.println("Successfully loaded already downloaded videos");
-
-        }catch(IOException e){
-            System.out.println("There was an issue while loading the already downloaded videos");
-            System.out.println(e);
-        }
-
-
-
     }
 
 
