@@ -2,22 +2,18 @@ import java.io.*;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
+
 import java.util.List;
 import java.util.Scanner;
-import java.util.Set;
+
 
 public class VideoDownloader{
     private HashMap<String,ArrayList<String>> RSSFeedsPaths = new HashMap<>();                                               //stores the name of the class, the URL of the RSS feed and the Path you wish to download too. Uses the name as a key
-    private HashMap<String,List<videoData>> videos = new HashMap<>();                                                  //stores all the video URLs from the class, uses the name as a key
-
-
-
+    private HashMap<String,List<videoData>> videos = new HashMap<>();                                                        //stores all the video URLs from the class, uses the name as a key
 
     private String mainFilePath = "mainFile";                                                                                //path to the mainFile
-    private String loadedFilePath = "written";                                                                               //path to the file containing the already downloaded videos
-
+    
+    private boolean found = false;
     
 
     /**
@@ -26,9 +22,10 @@ public class VideoDownloader{
      */
     public VideoDownloader(){
         loadMainFile();
-        downloadRSSFeed();
-        downloadVideo();
-
+        if(found){
+            downloadRSSFeed();
+            downloadVideo();
+        }
     }
 
    
@@ -44,7 +41,7 @@ public class VideoDownloader{
         System.out.println("Attempting to download videos");
         for(String s : videos.keySet()){                                                                                          //loops through all of the classes you are downloading videos for
             
-            for(videoData vD : videos.get(s)){                                                                                      // loops throgu all of the video URLs for that class then downloads the video
+            for(videoData vD : videos.get(s)){                                                                                    // loops throgu all of the video URLs for that class then downloads the video
                 try{
                     System.out.println("Downloading "+ vD.getName());
                     BufferedInputStream in = new BufferedInputStream(new URL(vD.getURL()).openStream());
@@ -119,7 +116,7 @@ public class VideoDownloader{
                 String URL = null;
 
                 while(sc.hasNextLine()){ 
-                                                                                                               //iterates through the RSS feed
+                                                                                                                                    //iterates through the RSS feed
                     String line = sc.nextLine();
                     if(line.contains(".mp4") && line.contains("url")){                                                              //searches for lines that contain .mp4 and URL
                         String a[] = line.split("\"");
@@ -184,6 +181,7 @@ public class VideoDownloader{
             
             sc.close();
             System.out.println("mainFile loaded successfully");
+            found = true;
         }catch(IOException e){
             System.out.println("Either the file was not found successfully or the file is not formatted correctly");
             System.out.println("Please check that there is a file called mainFile in the directory of the program");
