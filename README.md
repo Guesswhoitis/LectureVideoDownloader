@@ -33,5 +33,6 @@ e.g
 
 
 
-if after running and or reading the code you have any questions or suggestions please do not hesitate to leave a suggestion in the git
+If after running and or reading the code you have any questions or suggestions please do not hesitate to leave a suggestion in the git
+
 Thank you.
