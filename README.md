@@ -1,4 +1,4 @@
-# This was a project I created years ago. I am making it public purely to show it on my GitHub
+# This was a project I created years ago. I am making it public purely to show it on my GitHub. Do not use this as it is bad.
 
 # LectureVideoDownloader
 A small commandLine program to download all of your lectures from a supplied RSS feed.
