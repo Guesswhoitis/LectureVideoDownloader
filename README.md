@@ -1,3 +1,5 @@
+# This was a project I created years ago. I am making it public purely to show it on my GitHub
+
 # LectureVideoDownloader
 A small commandLine program to download all of your lectures from a supplied RSS feed.
 
@@ -28,11 +30,3 @@ e.g
     ComputerScience
     https://YourRssFeedAtWhatEverAddress.com/Whatever
     /home/userName/Documents/yourCoolDirectory
-
-
-
-
-
-If after running and or reading the code you have any questions or suggestions please do not hesitate to leave a suggestion in the git
-
-Thank you.
